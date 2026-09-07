@@ -1,0 +1,6 @@
+results/
+logs/*.txt
+.Rhistory
+.RData
+.Rproj.user/
+__pycache__/
