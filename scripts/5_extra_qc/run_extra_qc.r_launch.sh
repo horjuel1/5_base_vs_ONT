@@ -1,6 +1,6 @@
 #!/bin/bash
 # Depends on 2_persite_pileup/ outputs for coverage_breadth_overlap.r.
-set -euo pipefail
+set -eo pipefail
 
 PROJECT_DIR="/dcs11/scharpf/data/horjuela/5base_vs_ont"
 SAMPLES_TSV="$PROJECT_DIR/config/samples.tsv"
