@@ -4,7 +4,7 @@
 # the resource profile buffy_methylation_architecture's own
 # 16_compute_cpg_pair_correlation_unconstrained_per_sample.r needed on
 # real cluster data after its OOM history, hence the generous mem/time.
-set -euo pipefail
+set -eo pipefail
 
 PROJECT_DIR="/dcs11/scharpf/data/horjuela/5base_vs_ont"
 SAMPLES_TSV="$PROJECT_DIR/config/samples.tsv"

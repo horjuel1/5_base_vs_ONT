@@ -1,7 +1,7 @@
 #!/bin/bash
 # Depends on 2_persite_pileup/build_persite_pileups.r_launch.sh having
 # already produced fivebase_sites.parquet and ont_sites.parquet per sample.
-set -euo pipefail
+set -eo pipefail
 
 PROJECT_DIR="/dcs11/scharpf/data/horjuela/5base_vs_ont"
 SAMPLES_TSV="$PROJECT_DIR/config/samples.tsv"
