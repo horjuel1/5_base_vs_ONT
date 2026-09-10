@@ -1,9 +1,9 @@
 #!/bin/bash
 # Loops over config/samples.tsv and submits one sbatch job per sample.
 # Adjust PROJECT_DIR to wherever this repo actually lives on the cluster.
-set -euo pipefail
+set -eo pipefail
 
-PROJECT_DIR="/dcs11/scharpf/data/horjuela/5base_vs_ont"
+PROJECT_DIR="/dcs11/scharpf/data/horjuela/9_2026_5-base_ONT_comparison"
 SCRIPT="$PROJECT_DIR/scripts/1_fragment_lengths/compute_fragment_length_distribution.r"
 SAMPLES_TSV="$PROJECT_DIR/config/samples.tsv"
 OUT_BASE="$PROJECT_DIR/results"
