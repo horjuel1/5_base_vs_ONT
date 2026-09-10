@@ -57,17 +57,18 @@ if (max_distance_bp >= BUCKET_SIZE_BP) {
 
 log_msg("Reading: ", calls_file)
 dt <- fread(calls_file, sep = "\t",
-            select = c("read_id", "chrom", "ref_position", "ref_mod_strand", "call_code", "fail", "within_alignment"))
+            select = c("read_id", "chrom", "ref_position", "ref_mod_strand", "call_code", "fail", "within_alignment", "flag"))
 log_msg("Rows read: ", formatC(nrow(dt), format = "d", big.mark = ","))
 
-dt <- dt[chrom %in% CHROM_ORDER & within_alignment == TRUE & fail == FALSE]
-mod_char <- substr(dt$call_code, 1, 1)
-dt <- dt[mod_char %in% c("m", "h", "-")]
-mod_char <- mod_char[mod_char %in% c("m", "h", "-")]
-log_msg("Confident calls: ", formatC(nrow(dt), format = "d", big.mark = ","))
-
-dt[, state := as.integer(mod_char %in% c("m", "h"))]
-dt[, pos := ifelse(ref_mod_strand == "-", ref_position - 1L, ref_position)]
+# Filtering (including dropping secondary/supplementary alignment calls -
+# see filter_and_classify_ont_calls()'s own comment for why that matters
+# more here than in 2_persite_pileup/build_ont_site_table.r: a chimeric/
+# concatemer read's supplementary segment would otherwise fabricate within-
+# read CpG pairs across two physically unrelated loci) is shared with
+# build_ont_site_table.r via _shared_utils.r, so both stay in sync.
+dt <- filter_and_classify_ont_calls(dt)
+dt[, state := is_mod]
+dt[, pos := cpg_pos]
 long_dt <- unique(dt[, .(read_id, chrom, pos, state)], by = c("read_id", "chrom", "pos"))
 log_msg("Read-level CpG calls: ", formatC(nrow(long_dt), format = "d", big.mark = ","))
 
