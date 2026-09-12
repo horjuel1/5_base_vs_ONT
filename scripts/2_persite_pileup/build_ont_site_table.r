@@ -36,6 +36,16 @@ reference in the direction given by ref_mod_strand; for '-' strand calls
 that position is the CpG's G, so it's shifted back by 1bp to land on the
 same cpg_pos convention as the '+' strand C (matching
 build_fivebase_site_table.r's convention).
+
+Calls from secondary (SAM flag 0x100) or supplementary (0x800) alignment
+records are dropped before aggregation - a chimeric/concatemer ONT read
+(two independent molecules ligated together during adapter prep) maps as
+a primary alignment plus supplementary segment(s) sharing the same
+read_id, and its calls can land on a physically unrelated genomic locus.
+That doesn't corrupt this site-level pileup as badly as it would a
+per-read grouping (see 4_cpg_correlation_distance/), but it's still
+counting a chimeric artifact's calls as real coverage - dropped here too
+for consistency, matching smMethID's calls_to_moleculebed.r.
 ")
 }
 
@@ -50,18 +60,10 @@ dir.create(dirname(out_file), recursive = TRUE, showWarnings = FALSE)
 log_msg("Reading: ", calls_file)
 dt <- fread(calls_file, sep = "\t",
             select = c("chrom", "ref_position", "ref_mod_strand", "call_prob",
-                       "call_code", "fail", "within_alignment"))
+                       "call_code", "fail", "within_alignment", "flag"))
 log_msg("Rows read: ", formatC(nrow(dt), format = "d", big.mark = ","))
 
-dt <- dt[chrom %in% CHROM_ORDER & within_alignment == TRUE & fail == FALSE]
-mod_char <- substr(dt$call_code, 1, 1)
-dt <- dt[mod_char %in% c("m", "h", "-")]
-mod_char <- mod_char[mod_char %in% c("m", "h", "-")]
-if (!is.na(min_call_prob)) dt <- dt[call_prob >= min_call_prob]
-log_msg("Confident calls after filtering: ", formatC(nrow(dt), format = "d", big.mark = ","))
-
-dt[, is_mod := as.integer(mod_char %in% c("m", "h"))]
-dt[, cpg_pos := ifelse(ref_mod_strand == "-", ref_position - 1L, ref_position)]
+dt <- filter_and_classify_ont_calls(dt, min_call_prob = min_call_prob)
 
 site_dt <- dt[, .(mod_count = sum(is_mod), coverage = .N), by = .(chrom, cpg_pos)]
 site_dt <- site_dt[coverage >= min_coverage]
