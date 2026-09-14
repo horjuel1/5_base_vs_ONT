@@ -15,18 +15,22 @@
 # {sample}_5mC_all.bed (missing the strand column after its awk reduction,
 # so it can't be correctly CpG-merged post-hoc without regenerating).
 #
-# --cpg --combine-strands: modkit handles +/- strand merging internally
-# and anchors each combined CpG at the plus-strand C's position - the
-# same coordinate convention this project's build_ont_site_table.r and
-# build_fivebase_site_table.r already use, so the output here needs no
-# manual minus-strand shift before joining against ont_sites.parquet.
+# --cpg WITHOUT --combine-strands: modkit's internal strand-combining
+# panics on this modBAM (Rust panic in base_mods_adapter.rs, isolated to
+# exactly the "combining strands at CpG motifs" step - basic MM/ML
+# parsing, read sampling, and threshold estimation all worked fine before
+# that point). Rather than chase a modkit bug, this leaves +/- strand
+# rows separate and build_fivebase_site_table_from_modkit.r does the same
+# manual minus-strand shift build_fivebase_site_table.r and
+# build_ont_site_table.r already do - reusing proven logic instead of
+# depending on a feature that crashes on this particular modBAM.
 
 set -eo pipefail
 
 MODKIT="/dcs10/scharpf/data/horjuela/resources/modkit_v0.6.1/modkit"
 MODBAM="/dcs11/scharpf/data/horjuela/sandbox/7_27_26_cram_to_modbam_LUCAS_full/modbams/CGPLLU431P_5B_lib1_bt2-bwa_umi_true_hg19_wm_idt_spike_v0.1.bam"
 FASTA="/dcl01/scharpf/data/pipeline-hub/pipeline-resources/bwa/hg19_wm_idt_spike/hg19_wm_idt_spike.fa"
-OUT_BED="/dcs11/scharpf/data/horjuela/5base_vs_ont/results/CGPLLU431P/tables/CGPLLU431P_5mC_cpg_combined.bed"
+OUT_BED="/dcs11/scharpf/data/horjuela/5base_vs_ont/results/CGPLLU431P/tables/CGPLLU431P_5mC_per_strand.bed"
 
 mkdir -p "$(dirname "$OUT_BED")"
 
@@ -40,8 +44,7 @@ done
   "$OUT_BED" \
   --ref "$FASTA" \
   --cpg \
-  --combine-strands \
   --modified-bases 5mC \
   --threads "${SLURM_CPUS_PER_TASK:-4}"
 
-echo "Wrote $(wc -l < "$OUT_BED") CpG sites to $OUT_BED"
+echo "Wrote $(wc -l < "$OUT_BED") per-strand CpG rows to $OUT_BED"
