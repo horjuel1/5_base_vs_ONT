@@ -5,7 +5,7 @@
 # the largest raw file here, hence the larger mem/time request).
 set -eo pipefail
 
-PROJECT_DIR="/dcs11/scharpf/data/horjuela/5base_vs_ont"
+PROJECT_DIR="/dcs11/scharpf/data/horjuela/9_2026_5-base_ONT_comparison"
 SAMPLES_TSV="$PROJECT_DIR/config/samples.tsv"
 OUT_BASE="$PROJECT_DIR/results"
 LOG_DIR="$PROJECT_DIR/logs"
