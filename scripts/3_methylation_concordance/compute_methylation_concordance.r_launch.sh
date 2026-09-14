@@ -3,7 +3,7 @@
 # already produced fivebase_sites.parquet and ont_sites.parquet per sample.
 set -eo pipefail
 
-PROJECT_DIR="/dcs11/scharpf/data/horjuela/5base_vs_ont"
+PROJECT_DIR="/dcs11/scharpf/data/horjuela/9_2026_5-base_ONT_comparison"
 SAMPLES_TSV="$PROJECT_DIR/config/samples.tsv"
 OUT_BASE="$PROJECT_DIR/results"
 LOG_DIR="$PROJECT_DIR/logs"
