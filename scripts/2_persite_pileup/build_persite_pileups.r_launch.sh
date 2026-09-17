@@ -15,7 +15,7 @@ mkdir -p "$OUT_BASE" "$LOG_DIR"
 
 module load conda_R/4.4.x
 
-tail -n +2 "$SAMPLES_TSV" | while IFS=$'\t' read -r sample_id fivebase_frag fivebase_pileup ont_fraglen ont_cpg_density ont_calls; do
+tail -n +2 "$SAMPLES_TSV" | while IFS=$'\t' read -r sample_id fivebase_frag fivebase_pileup ont_fraglen ont_cpg_density ont_calls ont_pileup; do
   [[ -z "$sample_id" ]] && continue
   OUT_DIR="$OUT_BASE/$sample_id/tables"
   mkdir -p "$OUT_DIR"
@@ -32,5 +32,5 @@ tail -n +2 "$SAMPLES_TSV" | while IFS=$'\t' read -r sample_id fivebase_frag five
     --nodes=1 --cpus-per-task=4 --mem=96G --time=1-00:00:00 \
     --partition=cancergen,shared \
     --output="$LOG_DIR/ont_sites_${sample_id}.o%j.txt" \
-    --wrap="Rscript '$PROJECT_DIR/scripts/2_persite_pileup/build_ont_site_table.r' '$ont_calls' '$OUT_DIR/ont_sites.parquet' $MIN_COVERAGE"
+    --wrap="Rscript '$PROJECT_DIR/scripts/2_persite_pileup/build_ont_site_table.r' '$ont_pileup' '$OUT_DIR/ont_sites.parquet' $MIN_COVERAGE"
 done
