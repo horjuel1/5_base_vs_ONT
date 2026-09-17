@@ -15,7 +15,7 @@ args <- commandArgs(trailingOnly = TRUE)
 if (length(args) < 4) {
   stop("
 Usage:
-Rscript compute_fragment_length_distribution.r <fivebase_mod_frag_file> <ont_fraglen_file> <sample_id> <out_dir>
+Rscript compute_fragment_length_distribution.r <fivebase_mod_frag_file> <ont_frags_file> <sample_id> <out_dir>
 
 Fragment length distribution, mono-/di-nucleosome periodicity, and
 longer-fragment abundance for one sample sequenced on both platforms.
@@ -31,9 +31,17 @@ buffy_methylation_architecture/scripts/cfdna_nucleosome_periodicity/
 1_compute_fragment_length_distribution.r, which this script's 5-base
 histogram/peak logic is adapted from).
 
-ont_fraglen_file (ONT long-read; tab-separated, gzipped):
-  read_id chrom fragment_length read_length
-Already one row per read - no dedup needed.
+ont_frags_file (ONT per-call table, tab-separated, header present):
+  read_id chrom flag alignment_start alignment_end ... (+ CpG-call columns, unused here)
+Fragment length is derived as alignment_end - alignment_start (the true
+aligned reference span), deduped to one row per read_id - there is no
+separate per-read fragment-length file in this project; every stage
+that needs ONT read-level fragment length or CpG counts derives them
+from this same calls.tsv, so there's only one ONT input to keep in sync.
+Calls from secondary/supplementary alignment records (SAM flag
+0x100/0x800) are dropped first, same rationale as
+_shared_utils.r's filter_and_classify_ont_calls() - a chimeric read's
+supplementary segment has its own, unrelated alignment span.
 
 Unlike the short-read-only cfDNA periodicity script this is adapted
 from, ONT fragments routinely exceed the 50-1000bp short-read-only
@@ -47,12 +55,12 @@ that shared axis.
 }
 
 fivebase_frag_file <- args[[1]]
-ont_fraglen_file    <- args[[2]]
+ont_frags_file      <- args[[2]]
 sample_id           <- args[[3]]
 out_dir             <- args[[4]]
 
 if (!file.exists(fivebase_frag_file)) stop("fivebase_mod_frag_file not found: ", fivebase_frag_file)
-if (!file.exists(ont_fraglen_file))   stop("ont_fraglen_file not found: ", ont_fraglen_file)
+if (!file.exists(ont_frags_file))     stop("ont_frags_file not found: ", ont_frags_file)
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
 # ─────────────────────────────────────────────
@@ -85,8 +93,12 @@ dt_5b <- unique(dt_5b[, .(read_id, fragment_length = insert_size)])
 dt_5b <- dt_5b[!is.na(fragment_length) & fragment_length > 0]
 log_msg("5-base unique fragments: ", formatC(nrow(dt_5b), format = "d", big.mark = ","))
 
-log_msg("Reading ONT: ", ont_fraglen_file)
-dt_ont <- fread(ont_fraglen_file, sep = "\t", select = c("read_id", "fragment_length"))
+log_msg("Reading ONT: ", ont_frags_file)
+dt_ont <- fread(ont_frags_file, sep = "\t",
+                select = c("read_id", "chrom", "flag", "alignment_start", "alignment_end"))
+dt_ont[, flag := as.integer(flag)]
+dt_ont <- dt_ont[chrom %in% CHROM_ORDER & bitwAnd(flag, 0x900L) == 0L]
+dt_ont <- unique(dt_ont[, .(read_id, fragment_length = alignment_end - alignment_start)])
 dt_ont <- dt_ont[!is.na(fragment_length) & fragment_length > 0]
 log_msg("ONT reads: ", formatC(nrow(dt_ont), format = "d", big.mark = ","))
 

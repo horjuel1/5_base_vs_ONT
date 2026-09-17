@@ -15,7 +15,7 @@ MAX_DISTANCE_BP=2000
 mkdir -p "$LOG_DIR"
 module load conda_R/4.4.x
 
-tail -n +2 "$SAMPLES_TSV" | while IFS=$'\t' read -r sample_id fivebase_frag fivebase_pileup ont_fraglen ont_cpg_density ont_calls; do
+tail -n +2 "$SAMPLES_TSV" | while IFS=$'\t' read -r sample_id fivebase_frag fivebase_pileup ont_frags ont_pileup; do
   [[ -z "$sample_id" ]] && continue
   OUT_DIR="$OUT_BASE/$sample_id/tables"
   PLOT_DIR="$OUT_BASE/$sample_id/plots"
@@ -33,7 +33,7 @@ tail -n +2 "$SAMPLES_TSV" | while IFS=$'\t' read -r sample_id fivebase_frag five
     --nodes=1 --cpus-per-task=4 --mem=96G --time=1-00:00:00 \
     --partition=cancergen,shared \
     --output="$LOG_DIR/cpgcorr_ont_${sample_id}.o%j.txt" \
-    --wrap="Rscript '$PROJECT_DIR/scripts/4_cpg_correlation_distance/2_compute_ont_cpg_pair_correlation.r' '$ont_calls' '$sample_id' '$OUT_DIR/cpg_correlation_ont.tsv' $MAX_DISTANCE_BP"
+    --wrap="Rscript '$PROJECT_DIR/scripts/4_cpg_correlation_distance/2_compute_ont_cpg_pair_correlation.r' '$ont_frags' '$sample_id' '$OUT_DIR/cpg_correlation_ont.tsv' $MAX_DISTANCE_BP"
 done
 
 # Run 3_plot_correlation_by_distance_comparison.r manually per sample once

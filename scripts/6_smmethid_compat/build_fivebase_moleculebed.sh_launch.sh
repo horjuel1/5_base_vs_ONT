@@ -19,7 +19,7 @@ module load conda_R/4.4.x samtools
 
 export SMMETHID_DIR
 
-tail -n +2 "$SAMPLES_TSV" | while IFS=$'\t' read -r sample_id fivebase_frag fivebase_pileup ont_fraglen ont_cpg_density ont_calls; do
+tail -n +2 "$SAMPLES_TSV" | while IFS=$'\t' read -r sample_id fivebase_frag fivebase_pileup ont_frags ont_pileup; do
   [[ -z "$sample_id" ]] && continue
   OUT_DIR="$OUT_BASE/$sample_id/tables"
   mkdir -p "$OUT_DIR"

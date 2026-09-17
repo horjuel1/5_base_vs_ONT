@@ -13,7 +13,7 @@ args <- commandArgs(trailingOnly = TRUE)
 if (length(args) < 3) {
   stop("
 Usage:
-Rscript 2_compute_ont_cpg_pair_correlation.r <ont_calls_file> <sample_id> <out_file> [max_distance_bp]
+Rscript 2_compute_ont_cpg_pair_correlation.r <ont_frags_file> <sample_id> <out_file> [max_distance_bp]
 
 Within-read CpG co-methylation correlation as a function of genomic
 distance, for ONT. calls.tsv is already one row per (read_id, CpG call),
@@ -41,7 +41,7 @@ sample_id        <- args[[2]]
 out_file         <- args[[3]]
 max_distance_bp  <- if (length(args) >= 4) as.integer(args[[4]]) else 2000L
 
-if (!file.exists(calls_file)) stop("ont_calls_file not found: ", calls_file)
+if (!file.exists(calls_file)) stop("ont_frags_file not found: ", calls_file)
 dir.create(dirname(out_file), recursive = TRUE, showWarnings = FALSE)
 
 BIN_WIDTH_BP <- 10L

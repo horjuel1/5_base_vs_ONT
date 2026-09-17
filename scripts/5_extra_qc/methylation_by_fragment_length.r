@@ -14,23 +14,32 @@ args <- commandArgs(trailingOnly = TRUE)
 if (length(args) < 5) {
   stop("
 Usage:
-Rscript methylation_by_fragment_length.r <fivebase_mod_frag_file> <ont_cpg_density_file> <sample_id> <out_tsv> <out_png>
+Rscript methylation_by_fragment_length.r <fivebase_mod_frag_file> <ont_frags_file> <sample_id> <out_tsv> <out_png>
 
 Does apparent methylation / CpG density depend on fragment length -
 relevant for cfDNA, where short fragments are enriched at nucleosome-
 protected, often CpG-dense regions (a known DELFI/fragmentomics-
 adjacent signal, not just a QC nicety here).
 
-ont_cpg_density_file columns (tab-separated, gzipped):
-  read_id chrom fragment_length genomic_cpg_count called_cpg_count methylated_cpg_count
+ONT's per-read fragment_length/called_cpg_count/methylated_cpg_count are
+derived directly from ont_frags_file (calls.tsv) via
+_shared_utils.r's filter_and_classify_ont_calls() + a by-read_id
+aggregation, rather than a separate precomputed file - there is only one
+ONT input to this project now, kept in sync everywhere it's used.
+Note: unlike a true genomic_cpg_count (every CpG in the read's span,
+called or not), called_cpg_count only counts CpGs that actually got a
+confident call - cpg_density here is therefore called-CpGs-per-bp, a
+slight underestimate of true CpG density wherever coverage/calling isn't
+complete across a read, but computed identically for every read so it's
+still valid for the length-binned comparison this script does.
 ")
 }
 
-fivebase_frag_file    <- args[[1]]
-ont_cpg_density_file  <- args[[2]]
-sample_id             <- args[[3]]
-out_tsv               <- args[[4]]
-out_png               <- args[[5]]
+fivebase_frag_file <- args[[1]]
+ont_frags_file      <- args[[2]]
+sample_id           <- args[[3]]
+out_tsv             <- args[[4]]
+out_png             <- args[[5]]
 
 LENGTH_BREAKS <- c(0, 100, 150, 167, 200, 250, 320, 400, 600, 1000, 5000, Inf)
 
@@ -43,11 +52,20 @@ dt_5b <- dt_5b[num_cpg > 0]
 dt_5b[, meth_frac := num_mod / num_cpg]
 dt_5b[, cpg_density := num_cpg / fragment_length]
 
-log_msg("Reading ONT: ", ont_cpg_density_file)
-dt_ont <- fread(ont_cpg_density_file, sep = "\t")
+log_msg("Reading ONT: ", ont_frags_file)
+dt_ont_calls <- fread(ont_frags_file, sep = "\t",
+                       select = c("read_id", "chrom", "ref_position", "ref_mod_strand", "call_prob",
+                                  "call_code", "fail", "within_alignment", "flag",
+                                  "alignment_start", "alignment_end"))
+dt_ont_calls <- filter_and_classify_ont_calls(dt_ont_calls)
+dt_ont <- dt_ont_calls[, .(
+  fragment_length = (alignment_end - alignment_start)[1],
+  called_cpg_count = .N,
+  methylated_cpg_count = sum(is_mod)
+), by = read_id]
 dt_ont <- dt_ont[called_cpg_count > 0]
 dt_ont[, meth_frac := methylated_cpg_count / called_cpg_count]
-dt_ont[, cpg_density := genomic_cpg_count / fragment_length]
+dt_ont[, cpg_density := called_cpg_count / fragment_length]
 
 bin_summary <- function(dt, label) {
   dt <- copy(dt)

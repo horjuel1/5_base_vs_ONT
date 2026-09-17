@@ -13,7 +13,7 @@ mkdir -p "$OUT_BASE" "$LOG_DIR"
 
 module load conda_R/4.4.x
 
-tail -n +2 "$SAMPLES_TSV" | while IFS=$'\t' read -r sample_id fivebase_frag fivebase_pileup ont_fraglen ont_cpg_density ont_calls; do
+tail -n +2 "$SAMPLES_TSV" | while IFS=$'\t' read -r sample_id fivebase_frag fivebase_pileup ont_frags ont_pileup; do
   [[ -z "$sample_id" ]] && continue
   OUT_DIR="$OUT_BASE/$sample_id/tables"
   mkdir -p "$OUT_DIR"
@@ -26,5 +26,5 @@ tail -n +2 "$SAMPLES_TSV" | while IFS=$'\t' read -r sample_id fivebase_frag five
     --time=2:00:00 \
     --partition=cancergen,shared \
     --output="$LOG_DIR/fraglen_${sample_id}.o%j.txt" \
-    --wrap="Rscript '$SCRIPT' '$fivebase_frag' '$ont_fraglen' '$sample_id' '$OUT_DIR'"
+    --wrap="Rscript '$SCRIPT' '$fivebase_frag' '$ont_frags' '$sample_id' '$OUT_DIR'"
 done

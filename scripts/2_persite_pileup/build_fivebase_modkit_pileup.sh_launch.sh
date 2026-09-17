@@ -20,10 +20,13 @@
 # exactly the "combining strands at CpG motifs" step - basic MM/ML
 # parsing, read sampling, and threshold estimation all worked fine before
 # that point). Rather than chase a modkit bug, this leaves +/- strand
-# rows separate and build_fivebase_site_table_from_modkit.r does the same
-# manual minus-strand shift build_fivebase_site_table.r and
-# build_ont_site_table.r already do - reusing proven logic instead of
-# depending on a feature that crashes on this particular modBAM.
+# rows separate; a parser doing the same manual minus-strand shift
+# build_fivebase_site_table.r/build_ont_site_table.r already use would
+# need to be paired with this (see
+# 2_persite_pileup/build_ont_site_table_from_modkit.r for that exact
+# pattern, currently wired to the ONT bed instead - this 5-base/modBAM
+# path is not part of the current plan per the decision to keep 5-base
+# on mod_pileup.txt, but the fix here is the same one that worked there).
 
 set -eo pipefail
 

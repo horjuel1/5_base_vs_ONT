@@ -12,7 +12,7 @@ args <- commandArgs(trailingOnly = TRUE)
 if (length(args) < 2) {
   stop("
 Usage:
-Rscript build_ont_moleculebed.r <ont_calls_file> <out_moleculebed_file> [min_call_prob]
+Rscript build_ont_moleculebed.r <ont_frags_file> <out_moleculebed_file> [min_call_prob]
 
 Emits ONT's per-call table as a molecule-bed (chrom, start, end, read_id,
 call [0/1]), header-less TSV - the same schema smMethID's own
@@ -38,7 +38,7 @@ calls_file    <- args[[1]]
 out_file      <- args[[2]]
 min_call_prob <- if (length(args) >= 3) as.numeric(args[[3]]) else NA_real_
 
-if (!file.exists(calls_file)) stop("ont_calls_file not found: ", calls_file)
+if (!file.exists(calls_file)) stop("ont_frags_file not found: ", calls_file)
 dir.create(dirname(out_file), recursive = TRUE, showWarnings = FALSE)
 
 log_msg("Reading: ", calls_file)

@@ -13,7 +13,7 @@ args <- commandArgs(trailingOnly = TRUE)
 if (length(args) < 3) {
   stop("
 Usage:
-Rscript build_ont_site_table.r <ont_calls_file> <out_parquet> [min_coverage] [min_call_prob]
+Rscript build_ont_site_table.r <ont_frags_file> <out_parquet> [min_coverage] [min_call_prob]
 
 Aggregates ONT's per-call table (one row per CpG call per read) into one
 row per CpG site, analogous to a modkit-pileup bedMethyl, so it can be
@@ -54,7 +54,7 @@ out_file      <- args[[2]]
 min_coverage  <- if (length(args) >= 3) as.integer(args[[3]]) else 5L
 min_call_prob <- if (length(args) >= 4) as.numeric(args[[4]]) else NA_real_
 
-if (!file.exists(calls_file)) stop("ont_calls_file not found: ", calls_file)
+if (!file.exists(calls_file)) stop("ont_frags_file not found: ", calls_file)
 dir.create(dirname(out_file), recursive = TRUE, showWarnings = FALSE)
 
 log_msg("Reading: ", calls_file)
